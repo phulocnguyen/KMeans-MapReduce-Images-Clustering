@@ -21,8 +21,14 @@ public abstract class Distance {
     }
     public static Distance getDistance(String name) {
         name = name.toLowerCase();
-        if (Objects.equals(name, "eucl")) {
+        if (Objects.equals(name, "euclidean")) {
             return new EuclideanDistance();
+        } else if (Objects.equals(name, "cosine")) {
+            return new CosineDistance();
+        } else if (Objects.equals(name, "manhattan")) {
+            return new ManhattanDistance();
+        } else if (Objects.equals(name, "minkowski")) {
+            return new MinkowskiDistance();
         }
         return null;
     }
