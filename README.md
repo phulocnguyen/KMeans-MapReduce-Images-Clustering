@@ -1,1 +1,1 @@
-# KMeans-MapReduce-Images-Clustering-
+# Images Clustering by Kmeans based on MapReduce Algorithm
