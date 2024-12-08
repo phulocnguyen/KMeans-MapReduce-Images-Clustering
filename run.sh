@@ -16,10 +16,10 @@ MAIN_CLASS=Main
 INPUT_FILE_PATH=/KMeans/resources/input/points.txt
 STATE_PATH=/KMeans/resources/input/clusters.txt
 NUMBER_OF_REDUCERS=3
-OUTPUT_DIR=/KMeans/resources/Output
+OUTPUT_DIR=/KMeans/resources/output
 DELTA=100000000.0
 MAX_ITERATIONS=10
-DISTANCE=euclidean
+DISTANCE=eucl
 
 hadoop jar ${JAR_PATH} ${MAIN_CLASS} --input ${INPUT_FILE_PATH} \
 --state ${STATE_PATH} \
