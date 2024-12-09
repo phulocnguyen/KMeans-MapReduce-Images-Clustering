@@ -4,8 +4,9 @@ from os.path import join
 from pathlib import Path
 
 import cv2
+from PIL import Image
 import numpy as np
-from skimage.feature import hog
+from imgbeddings import imgbeddings
 
 parser = argparse.ArgumentParser(description='This script creates features.txt and clusters.txt files for image clustering.')
 
@@ -19,32 +20,8 @@ args = parser.parse_args()
 
 def nparray_to_str(X):
     """Convert a numpy array to a space-separated string."""
-    return '\n'.join([' '.join(map(str, row)) for row in X])
-
-def extract_image_features(img):
-    """
-    Extracts features from the image.
-
-    :param img: Input image.
-    :return: A 1D array representing the image features.
-    """
-    # Resize image to 64x64
-    resized_img = cv2.resize(img, (64, 64))
-
-    # Convert to grayscale for HOG
-    gray_img = cv2.cvtColor(resized_img, cv2.COLOR_BGR2GRAY)
-    # Extract HOG features
-    features, _ = hog(
-        gray_img, 
-        orientations=9, 
-        pixels_per_cell=(8, 8),
-        cells_per_block=(2, 2), 
-        block_norm='L2-Hys', 
-        visualize=True, 
-        feature_vector=True
-    )
-
-    return features
+    to_save = '\n'.join([' '.join(str(X[i])[1:-1].split()) for i in range(len(X))])
+    return to_save
 
 
 def main(src_folder, dst_folder, k):
@@ -55,18 +32,21 @@ def main(src_folder, dst_folder, k):
     # create directory
     Path(dst_folder).mkdir(parents=True, exist_ok=True)
 
+    ibed = imgbeddings()
+
     # Process all images in the folder
     all_features = []
     for filename in os.listdir(src_folder):
         img_path = join(src_folder, filename)
         img = cv2.imread(img_path)
-
+        img_pil = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
         print(f"Processing image: {img_path}")
-        features = extract_image_features(img)
-        all_features.append(features)
+        embedding = ibed.to_embeddings(img_pil).squeeze() 
+        all_features.append(embedding)
 
     # write feature points
     all_features = np.array(all_features)
+
     with open(features_path, 'w') as f:
         f.write(nparray_to_str(all_features))
     print(f'Features saved in: {features_path}')
