@@ -5,8 +5,7 @@ hadoop fs -mkdir -p /KMeans/resources/input
 hadoop fs -mkdir -p /KMeans/resources/output
 
 # copy local input files
-hadoop fs -put ./resources/input/points.txt ./resources/input/clusters.txt /KMeans/resources/input/
-
+ 
 # remove output files if any
 hadoop fs -rm -r -f /KMeans/resources/output/*
 
