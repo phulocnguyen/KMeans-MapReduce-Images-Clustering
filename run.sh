@@ -7,7 +7,7 @@ hadoop fs -mkdir -p /KMeans/resources/output/cluster
 # copy local input files
 hadoop fs -put ./resources/input/ImageClustering/points.txt ./resources/input/ImageClustering/clusters.txt /KMeans/resources/input/cluster
 # remove output files if any
-hadoop fs -rm -r -f /KMeans/resources/output/*
+hadoop fs -rm -r -f /KMeans/resources/output/cluster/*
 
 # specify input parameters
 JAR_PATH=./executable_jar/kmeans_mapreduce.jar

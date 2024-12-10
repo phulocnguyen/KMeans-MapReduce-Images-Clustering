@@ -26,7 +26,7 @@ def nparray_to_str(X):
 
 def main(src_folder, dst_folder, k):
     # files to be created
-    features_path = join(dst_folder, 'points.txt')
+    features_path = join(dst_folder, 'features.txt')
     clusters_path = join(dst_folder, 'clusters.txt')
 
     # create directory
