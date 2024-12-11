@@ -7,13 +7,14 @@ import cv2
 from PIL import Image
 import numpy as np
 from imgbeddings import imgbeddings
+from sklearn.preprocessing import normalize
 
 parser = argparse.ArgumentParser(description='This script creates features.txt and clusters.txt files for image clustering.')
 
 parser.add_argument('--src_folder', type=str, help='Path to the folder containing images.')
-parser.add_argument('--dst_folder', type=str, help='Directory in which features.txt and clusters.txt will be saved.')
+parser.add_argument('--dst_folder', type=str, help='Directory in which points.txt and clusters.txt will be saved.')
 parser.add_argument('--k_init_centroids', type=int, help='How many initial uniformly sampled centroids to generate.',
-                    default=10)
+                    default=5)
 
 args = parser.parse_args()
 
@@ -26,7 +27,7 @@ def nparray_to_str(X):
 
 def main(src_folder, dst_folder, k):
     # files to be created
-    features_path = join(dst_folder, 'features.txt')
+    features_path = join(dst_folder, 'points.txt')
     clusters_path = join(dst_folder, 'clusters.txt')
 
     # create directory
@@ -42,7 +43,8 @@ def main(src_folder, dst_folder, k):
         img_pil = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
         print(f"Processing image: {img_path}")
         embedding = ibed.to_embeddings(img_pil).squeeze() 
-        all_features.append(embedding)
+        embeddings_l2 = normalize(embedding.reshape(1, -1), norm='l2', axis=1)
+        all_features.append(embeddings_l2.squeeze())
 
     # write feature points
     all_features = np.array(all_features)
