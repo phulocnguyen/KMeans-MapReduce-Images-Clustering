@@ -10,7 +10,7 @@ hadoop fs -put ./resources/input/ImageClustering/points.txt ./resources/input/Im
 hadoop fs -rm -r -f /KMeans/resources/output/cluster/*
 
 # specify input parameters
-JAR_PATH=./executable_jar/kmeans_mapreduce.jar
+JAR_PATH=./executable_jar/KMeans-MapReduce-Images-Clustering.jar
 MAIN_CLASS=Main
 INPUT_FILE_PATH=/KMeans/resources/input/cluster/points.txt
 STATE_PATH=/KMeans/resources/input/cluster/clusters.txt
