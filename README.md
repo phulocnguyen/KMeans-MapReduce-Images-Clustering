@@ -1,13 +1,13 @@
 # Images Clustering by Kmeans based on MapReduce Algorithm
 
-## Overview
-This repository implements a distributed version of the KMeans algorithm using the MapReduce framework. The application focuses on two primary use cases:
-
-#Collaborators
+# Collaborators
 1. Nguyễn Phú Lộc
 2. Phạm Chiến
 3. Bùi Ngọc Khánh
 4. Nguyễn Quang Huy 
+
+## Overview
+This repository implements a distributed version of the KMeans algorithm using the MapReduce framework. The application focuses on two primary use cases:
 
 1. **Image Clustering:** Grouping pixels or image features into clusters for segmentation or categorization.
 2. **Image Compression:** Reducing image size by representing similar pixel values with their cluster centroids.
@@ -97,10 +97,10 @@ Set parameters in the `run.sh` file:
 ![Input Image](data_prep_scripts/ImageCompression/sample_images/img.jpg)
 
 ### Compressed Image
-![Compressed Image](result.jpg)
+![Compressed Image](resources/compress.png)
 
 ### Clustering Images
-![Clustering Image](result.jpg)
+![Clustering Image](resources/clustering.jpeg)
 
 
 
