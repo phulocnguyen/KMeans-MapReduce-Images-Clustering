@@ -1,66 +1,90 @@
-import argparse
 import os
-from os.path import join
-from pathlib import Path
-
-import cv2
-from PIL import Image
 import numpy as np
-from imgbeddings import imgbeddings
+import torch
+import torchvision.transforms as transforms
+from torchvision.models import resnet50
+from sklearn.preprocessing import StandardScaler
 
-parser = argparse.ArgumentParser(description='This script creates features.txt and clusters.txt files for image clustering.')
+# Hàm tải ảnh và trích xuất đặc trưng
+def load_images_and_extract_features(image_folder, image_size=(224, 224)):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    
+    # Chuẩn bị mô hình ResNet-50
+    model = resnet50(pretrained=True)
+    model = torch.nn.Sequential(*list(model.children())[:-1])  # Bỏ lớp cuối (FC layer)
+    model.eval().to(device)
 
-parser.add_argument('--src_folder', type=str, help='Path to the folder containing images.')
-parser.add_argument('--dst_folder', type=str, help='Directory in which features.txt and clusters.txt will be saved.')
-parser.add_argument('--k_init_centroids', type=int, help='How many initial uniformly sampled centroids to generate.',
-                    default=10)
+    transform = transforms.Compose([
+        transforms.Resize(image_size),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
 
-args = parser.parse_args()
+    features = []
 
+    for file_name in os.listdir(image_folder):
+        if file_name.endswith(('.jpg', '.png', '.jpeg')):
+            file_path = os.path.join(image_folder, file_name)
+            
+            # Load và xử lý ảnh
+            img = transforms.ToPILImage()(torch.randn(3, *image_size)) # debug dummy file sửa :
+            img = transform(img).unsqueeze(0).to(device)
 
-def nparray_to_str(X):
-    """Convert a numpy array to a space-separated string."""
-    to_save = '\n'.join([' '.join(str(X[i])[1:-1].split()) for i in range(len(X))])
-    return to_save
+            # Trích xuất đặc trưng
+            with torch.no_grad():
+                feature = model(img).squeeze().cpu().numpy()
+            features.append(feature)
 
+    return np.array(features)
 
-def main(src_folder, dst_folder, k):
-    # files to be created
-    features_path = join(dst_folder, 'points.txt')
-    clusters_path = join(dst_folder, 'clusters.txt')
+# Hàm chuẩn hóa đặc trưng
+def scale_features(features):
+    scaler = StandardScaler()
+    scaled_features = scaler.fit_transform(features)
+    return scaled_features, scaler
 
-    # create directory
-    Path(dst_folder).mkdir(parents=True, exist_ok=True)
+# Hàm lưu đặc trưng vào file txt
+def save_features_to_txt(features, output_path):
+    with open(output_path, 'w') as f:
+        for feature in features:
+            feature_line = " ".join(map(str, feature))
+            f.write(feature_line + "\n")
 
-    ibed = imgbeddings()
+# Hàm khởi tạo tâm cụm
+def initialize_centroids(features, n_clusters=5):
+    np.random.seed(42)  # Đảm bảo tính tái lập
+    random_indices = np.random.choice(features.shape[0], size=n_clusters, replace=False)
+    centroids = features[random_indices]
+    return centroids
 
-    # Process all images in the folder
-    all_features = []
-    for filename in os.listdir(src_folder):
-        img_path = join(src_folder, filename)
-        img = cv2.imread(img_path)
-        img_pil = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-        print(f"Processing image: {img_path}")
-        embedding = ibed.to_embeddings(img_pil).squeeze() 
-        all_features.append(embedding)
+# Hàm lưu tâm cụm vào file txt kèm clusterid
+def save_centroids_to_txt_with_clusterid(centroids, output_path):
+    with open(output_path, 'w') as f:
+        for cluster_id, centroid in enumerate(centroids):
+            centroid_line = f"{cluster_id} " + " ".join(map(str, centroid))
+            f.write(centroid_line + "\n")
 
-    # write feature points
-    all_features = np.array(all_features)
+# Chạy chương trình
+if __name__ == "__main__":
+    # Đường dẫn tới thư mục chứa ảnh
+    image_folder = "/Users/phulocnguyen/Documents/Workspace/KMeans-MapReduce-Images-Clustering/data_prep_scripts/ImagesClustering/dataset"  # Thay bằng đường dẫn tới thư mục ảnh
 
-    with open(features_path, 'w') as f:
-        f.write(nparray_to_str(all_features))
-    print(f'Features saved in: {features_path}')
+    # Trích xuất đặc trưng từ ảnh
+    features = load_images_and_extract_features(image_folder)
 
-    # Generate and save uniformly sampled centroids
-    s = np.random.uniform(low=all_features.min(), high=all_features.max(), size=(k, all_features.shape[1]))
-    tmp_labels = np.arange(1, k + 1).reshape((k, 1))
-    clusters = np.hstack((tmp_labels, s))
+    # Chuẩn hóa đặc trưng
+    scaled_features, scaler = scale_features(features)
 
-    with open(clusters_path, 'w') as f:
-        f.write(nparray_to_str(clusters))
-    print(f'Centroids saved in: {clusters_path}')
+    # Lưu đặc trưng vào file txt
+    points_output_path = "/Users/phulocnguyen/Documents/Workspace/KMeans-MapReduce-Images-Clustering/resources/input/ImageClustering/points.txt"
+    save_features_to_txt(scaled_features, points_output_path)
+    print(f"Features saved to {points_output_path}")
 
+    # Khởi tạo tâm cụm
+    n_clusters = 5
+    centroids = initialize_centroids(scaled_features, n_clusters)
 
-if __name__ == '__main__':
-    args = parser.parse_args()
-    main(args.src_folder, args.dst_folder, args.k_init_centroids)
+    # Lưu tâm cụm vào file txt với clusterid
+    centroids_output_path = "/Users/phulocnguyen/Documents/Workspace/KMeans-MapReduce-Images-Clustering/resources/input/ImageClustering/cluster.txt"
+    save_centroids_to_txt_with_clusterid(centroids, centroids_output_path)
+    print(f"Centroids with cluster IDs saved to {centroids_output_path}")

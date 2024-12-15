@@ -34,7 +34,7 @@ def load_nparray(file):
         for line in f:
             data.append(np.array([float(num) for num in line.split(' ')]))
 
-    return np.stack(data).astype(np.float)
+    return np.stack(data).astype(float)
 
 
 def main(clusters_path, src_img, dst_img):
