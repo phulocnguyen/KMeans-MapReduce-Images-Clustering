@@ -14,9 +14,9 @@ INPUT_FILE_PATH=/KMeans/resources/input/compression/points.txt
 STATE_PATH=/KMeans/resources/input/compression/clusters.txt
 NUMBER_OF_REDUCERS=3
 OUTPUT_DIR=/KMeans/resources/output/compression 
-DELTA=10.0
+DELTA=50.0
 MAX_ITERATIONS=10
-DISTANCE=euclidean
+DISTANCE=cosine
 
 hadoop jar ${JAR_PATH} ${MAIN_CLASS} --input ${INPUT_FILE_PATH} \
 --state ${STATE_PATH} \
@@ -27,13 +27,14 @@ hadoop jar ${JAR_PATH} ${MAIN_CLASS} --input ${INPUT_FILE_PATH} \
 --distance ${DISTANCE}
 
 # execute jar file
-LAST_DIR="$(hadoop fs -ls -t -C /KMeans/resources/output | head -1)"
+LAST_DIR="$(hadoop fs -ls -t -C /KMeans/resources/output/compression | head -1)"
 
 # print results
 hadoop fs -cat "$LAST_DIR/part-r-[0-9][0-9][0-9][0-9][0-9]" | sort --numeric --key 1
 
+hadoop fs -ls /KMeans/resources/output/compression/
 
-hadoop fs -get /KMeans/resources/output/ ./resources/output
+hadoop fs -get /KMeans/resources/output/compression/ ./resources/output/Compression
 
 python data_prep_scripts/ImageCompression/data_prep_compress.py --src_img data_prep_scripts/ImageCompression/sample_images/img.jpg --dst_folder  resources/input/ImageCompression 
 
